@@ -9,11 +9,10 @@ if __name__ == '__main__':
     from visa import *
     from math import pow, exp
     
-    #myinstr = get_instruments_list()
-    #print(myinstr)
+    myinstr = get_instruments_list()
+    print(myinstr[2])
     #This is used when the script is asking the user to specify the instrument name
     #myinstr = input("What is your instrument name? ") 
-    #my_instrument = instrument(myinstr)
     my_instrument = instrument("GPIB0::16")
     instrument_attri = my_instrument.ask("*IDN?")
     manufact, model_num, ser_num, firm_ver = instrument_attri.split(",",4)    
@@ -86,7 +85,7 @@ if __name__ == '__main__':
     print("Full 2-port calibration finished")
     '''
     
-    
+    '''
     
     # Ask about what kind of BPM is being calibrated
     #BPM_style = input("What style is the BPM's processing freq? ")
@@ -102,7 +101,7 @@ if __name__ == '__main__':
     mag, phase, frequency = result
     print("magnitude is %sdB, phase is %s degree, at %.3eHz" %(mag, phase, frequency))
     
-    
+ '''   
     '''
     if cal_dictionary["Yes"]:
         print("Python counts 1 as true")    

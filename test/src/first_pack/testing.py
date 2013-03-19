@@ -3,18 +3,32 @@ Created on Mar 13, 2013
 
 @author: charliex
 '''
-# File: bind1.py
-from Tkinter import *
+import sys
+import Tkinter as tk
 
-root = Tk()
-def callback(event):
-    print "clicked at", event.x, event.y
-    
-frame = Frame(root, width=100, height=100)
-frame.pack()
+def toggle():
+    if mylabel.visible:
+        btnToggle["text"] = "Show Example"
+        print "Now you don't"
+        mylabel.place_forget()
+    else:
+        mylabel.place(mylabel.pi)
+        print "Now you see it"
+        btnToggle["text"] = "Hide Example"
+    mylabel.visible = not mylabel.visible
 
-button = Button(root, text="Hello")
-button.bind("<Button-1>", callback)
-button.pack()
+root = tk.Tk()
+
+print "TkVersion", tk.TkVersion
+print "TclVersion", tk.TclVersion
+print "Python version", sys.version_info
+
+mylabel = tk.Label(text="Example")
+mylabel.visible = True
+mylabel.place(x=20, y=50)
+mylabel.pi = mylabel.place_info()
+
+btnToggle = tk.Button(text="Hide Example", command=toggle)
+btnToggle.place(x=70, y=150)
 
 root.mainloop()
