@@ -3,14 +3,17 @@ Created on Mar 14, 2013
 
 @author: charliex
 '''
-
+def S_TRAN():
+    return {"S21":0,"S41":0,"S23":0,"S43":0}
+    
 
 if __name__ == '__main__':
     from visa import *
     from math import pow, exp
+    import time
     
     myinstr = get_instruments_list()
-    print(myinstr[2])
+    print(myinstr)
     #This is used when the script is asking the user to specify the instrument name
     #myinstr = input("What is your instrument name? ") 
     my_instrument = instrument("GPIB0::16")
@@ -20,6 +23,8 @@ if __name__ == '__main__':
     
     my_instrument.write("OPC?;PRES")                        #Return instrument to preset
     
+    instrument_timeout = my_instrument.timeout
+    print("Time out timers is %s second" %instrument_timeout)
     '''
     #Instrument calibration code
     #cal_dictionary = {"Yes":1, "No":0}
@@ -85,23 +90,124 @@ if __name__ == '__main__':
     print("Full 2-port calibration finished")
     '''
     
-    '''
+    #Change the timeout timer to work with marker output
+    instrument_timeout_def = instrument_timeout     #save the old timeout time
+    instrument_timeout = 20.0
+    my_instrument.timeout = instrument_timeout
+    print("Changing the timeout timer to %s sec" %my_instrument.timeout)
     
     # Ask about what kind of BPM is being calibrated
-    #BPM_style = input("What style is the BPM's processing freq? ")
-    my_instrument.write("STAR 170 MHZ; STOP 430 MHZ;OPC?")
+    #BPM_style = raw_input("What style is the BPM's processing freq? ")
+    #print("Frequency %r" %(BPM_style) )
+    my_instrument.write("STAR 270 MHZ; STOP 330 MHZ;OPC?")
     #my_instrument.write("CENT 300 MHZ; SPAN 60 MHZ;OPC?")
     my_instrument.write("S21")
+    my_instrument.write("LINM")
+    my_instrument.write("AUTO")
+    my_instrument.write("IFBW 100HZ")
     my_instrument.write("MARK1 300MHZ")
-    #my_instrument.write("SEAMAX")
+    my_instrument.ask("*OPC?")
+    
+    test1 = S_TRAN()
+    test2 = S_TRAN()
+    test3 = S_TRAN()
+    
+    raw_input("Connect port 1 to RED and port 2 to BLUE, then press enter")
+    my_instrument.write("WAIT")
     result = my_instrument.ask_for_values("OUTPMARK")
+    my_instrument.ask("*OPC?")
     #result = my_instrument.read_values()
     #result = my_instrument.read()
-    print(result)
-    mag, phase, frequency = result
-    print("magnitude is %sdB, phase is %s degree, at %.3eHz" %(mag, phase, frequency))
+    #print(result)
+    #test1["S21"], phase, frequency = result
+    #print("magnitude is %s Unit, phase is %s degree, at %.3eHz" %(test1["S21"], phase, frequency))
+    test1["S21"], phase, frequency = result
+    time.sleep(2)
+    my_instrument.write("WAIT")
+    result = my_instrument.ask_for_values("OUTPMARK")
+    my_instrument.ask("*OPC?")
+    test2["S21"], phase, frequency = result
+    time.sleep(2)
+    my_instrument.write("WAIT")
+    result = my_instrument.ask_for_values("OUTPMARK")
+    my_instrument.ask("*OPC?")
+    test3["S21"], phase, frequency = result
+    time.sleep(2)
+        
+    raw_input("Connect port 1 to RED and port 2 to GREEN, then press enter")
+    my_instrument.write("MARK1 300MHZ")
+    my_instrument.write("WAIT")
+    result = my_instrument.ask_for_values("OUTPMARK")
+    my_instrument.ask("*OPC?")
+    test1["S41"], phase, frequency = result 
+    time.sleep(2)
+    my_instrument.write("WAIT")   
+    result = my_instrument.ask_for_values("OUTPMARK")
+    my_instrument.ask("*OPC?")
+    test2["S41"], phase, frequency = result
+    time.sleep(2)
+    my_instrument.write("WAIT")
+    result = my_instrument.ask_for_values("OUTPMARK")
+    my_instrument.ask("*OPC?")
+    test3["S41"], phase, frequency = result
+    time.sleep(2)
     
- '''   
+    raw_input("Connect port 1 to YELLOW and port 2 to BLUE, then press enter")
+    my_instrument.write("MARK1 300MHZ")
+    my_instrument.write("WAIT")
+    result = my_instrument.ask_for_values("OUTPMARK")
+    my_instrument.ask("*OPC?")
+    test1["S23"], phase, frequency = result
+    time.sleep(2)
+    my_instrument.write("WAIT")
+    result = my_instrument.ask_for_values("OUTPMARK")
+    my_instrument.ask("*OPC?")
+    test2["S23"], phase, frequency = result
+    time.sleep(2)
+    my_instrument.write("WAIT")
+    result = my_instrument.ask_for_values("OUTPMARK")
+    my_instrument.ask("*OPC?")
+    test3["S23"], phase, frequency = result
+    time.sleep(2)
+            
+    raw_input("Connect port 1 to YELLOW and port 2 to GREEN, then press enter")
+    my_instrument.write("MARK1 300MHZ")
+    my_instrument.write("WAIT")
+    result = my_instrument.ask_for_values("OUTPMARK")
+    my_instrument.ask("*OPC?")
+    test1["S43"], phase, frequency = result
+    time.sleep(2)
+    my_instrument.write("WAIT")
+    result = my_instrument.ask_for_values("OUTPMARK")
+    my_instrument.ask("*OPC?")
+    test2["S43"], phase, frequency = result  
+    time.sleep(2)
+    my_instrument.write("WAIT")
+    result = my_instrument.ask_for_values("OUTPMARK")
+    my_instrument.ask("*OPC?")
+    test3["S43"], phase, frequency = result
+    time.sleep(2)
+    
+    #Changing back the timeout timer
+    instrument_timeout = instrument_timeout_def
+    my_instrument.timeout = instrument_timeout
+    print("Time out timer is changed back to %s sec" %my_instrument.timeout)
+              
+    x1 = ((test1["S41"]-test1["S21"])-(test1["S43"]-test1["S23"]))/(test1["S21"]+test1["S41"]+test1["S43"]+test1["S23"])
+    y1 = ((test1["S41"]-test1["S43"])-(test1["S21"]-test1["S23"]))/(test1["S21"]+test1["S41"]+test1["S43"]+test1["S23"])
+    
+    x2 = ((test2["S41"]-test2["S21"])-(test2["S43"]-test2["S23"]))/(test2["S21"]+test2["S41"]+test2["S43"]+test2["S23"])
+    y2 = ((test2["S41"]-test2["S43"])-(test2["S21"]-test2["S23"]))/(test2["S21"]+test2["S41"]+test2["S43"]+test2["S23"])
+    
+    x3 = ((test3["S41"]-test3["S21"])-(test3["S43"]-test3["S23"]))/(test3["S21"]+test3["S41"]+test3["S43"]+test3["S23"])
+    y3 = ((test3["S41"]-test3["S43"])-(test3["S21"]-test3["S23"]))/(test3["S21"]+test3["S41"]+test3["S43"]+test3["S23"])
+    print("First sets of sample data: %s" %(test1))
+    print("Second sets of sample data: %s" %test2)
+    print("Third sets of sample data: %s" %test3)
+    print("X center for 1st set: %s, 2nd set: %s, 3rd set: %s" %(x1,x2,x3))
+    print("Y center for 1st set: %s, 2nd set: %s, 3rd set: %s" %(y1,y2,y3))
+    
+    
     '''
     if cal_dictionary["Yes"]:
         print("Python counts 1 as true")    

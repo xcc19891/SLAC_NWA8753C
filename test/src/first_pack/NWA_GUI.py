@@ -5,6 +5,7 @@ Created on Mar 18, 2013
 '''
 from Tkinter import *
 from NWA_Mod import *
+import sys
 
 class NWA_GUI():
     '''
@@ -48,6 +49,10 @@ class NWA_GUI():
         #NWA Calibration
         self.NWA_cal_label = Label(frame, text="2. Calibrating the NWA", font=(12))
         self.NWA_cal_label.pack(anchor="w") 
+        self.NWA_cal_label.pi=self.NWA_cal_label.pack_info()
+        self.NWA_cal_label.visiable = True
+        #print(self.NWA_cal_label.pack_info())
+        #self.GUI_toggle(self.NWA_cal_label,self.NWA_cal_label.pi,self.NWA_cal_label.visiable)
         
         self.NWA_cal_yes = Button(frame, text="Start Calibration", bg="green")
         self.NWA_cal_yes.bind("<Button-1>",self.NWA_Cal)
@@ -56,9 +61,19 @@ class NWA_GUI():
         self.NWA_cal_no = Button(frame, text="Skip Calibration", bg="red", fg="white")
         self.NWA_cal_no.bind("<Button-1>",self.NWA_Calpass)
         self.NWA_cal_no.pack()
+        
+        self.NWA_S21_label = Label(frame, text="3. Measuring S21", font=(12))
+        self.NWA_S21_label.pack(anchor="w")
         root.mainloop()
 
 
+    def GUI_toggle(self,GUI_handle,GUI_info, GUI_visible):
+        if GUI_visible:
+            GUI_handle.pack_forget()
+        else:
+            GUI_handle.pack(GUI_handle.pack)
+        GUI_handle.visiable = not GUI_handle.visible
+    
     def GPIB_init(self,event):
         '''
         Pop up window to show if the HP8753C is found

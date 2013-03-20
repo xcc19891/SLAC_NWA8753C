@@ -27,6 +27,7 @@ class BPM_NWA:
                         manufact, model_num, ser_num, firm_ver = self.gpib_dev_attri.split(",",4)
                         if (model_num == "8753C") and (manufact == "HEWLETT PACKARD"):
                             print("Device found")
+                            self.gpib_dev.write("OPC?;PRES") 
                         error = 0
                         break
                     except VisaIOError:
