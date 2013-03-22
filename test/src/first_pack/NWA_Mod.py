@@ -102,9 +102,6 @@ class BPM_NWA:
                 self.gpib_dev.ask("*OPC?")
         print("Full 2-port calibration finished")
         
- 
-'''           
-    def GPIB_init(self,GPIB_device):
-        self.my_instr_dev = instrument(GPIB_device)
-        self.instrument_attri = self.my_instr_dev.ask("*IDN?")
-'''
+    def S21_measure(self):
+        print("Got you in NWA_Mod")
+        pass

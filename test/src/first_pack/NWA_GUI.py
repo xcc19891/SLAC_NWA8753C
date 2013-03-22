@@ -37,44 +37,54 @@ class NWA_GUI():
         self.instruct.pack(anchor="w")
         
         self.gpib_init = Label(frame,text="1. Initial GPIB link to the Network Analyzer (NWA)\n", font = (12))
-        
         self.gpib_init.config(justify="left")
         self.gpib_init.pack(anchor="w")
-        
-        #Launching the GPIB Init
-        self.GPIB_go = Button(frame, text="Init GPIB", bg="red", fg="white")
-        self.GPIB_go.bind("<Button-1>",self.GPIB_init)
-        self.GPIB_go.pack(anchor="center")
         
         #NWA Calibration
         self.NWA_cal_label = Label(frame, text="2. Calibrating the NWA", font=(12))
         self.NWA_cal_label.pack(anchor="w") 
         self.NWA_cal_label.pi=self.NWA_cal_label.pack_info()
-        self.NWA_cal_label.visiable = True
-        #print(self.NWA_cal_label.pack_info())
-        #self.GUI_toggle(self.NWA_cal_label,self.NWA_cal_label.pi,self.NWA_cal_label.visiable)
-        
-        self.NWA_cal_yes = Button(frame, text="Start Calibration", bg="green")
-        self.NWA_cal_yes.bind("<Button-1>",self.NWA_Cal)
-        self.NWA_cal_yes.pack()
-        
-        self.NWA_cal_no = Button(frame, text="Skip Calibration", bg="red", fg="white")
-        self.NWA_cal_no.bind("<Button-1>",self.NWA_Calpass)
-        self.NWA_cal_no.pack()
+        self.NWA_cal_label.pack_forget()
         
         self.NWA_S21_label = Label(frame, text="3. Measuring S21", font=(12))
         self.NWA_S21_label.pack(anchor="w")
+        self.NWA_S21_label.pi=self.NWA_S21_label.pack_info()
+        self.NWA_S21_label.pack_forget()
+        
+        # S21 button
+        self.NWA_S21_btn = Button(frame, text="Start S21 measurement", bg="green")
+        self.NWA_S21_btn.bind("<Button-1>",
+                              lambda event, GUI_list=[self.NWA_S21_label]:self.NWA_S21(GUI_list))
+        self.NWA_S21_btn.pack()
+        self.NWA_S21_btn.pi = self.NWA_S21_btn.pack_info()
+        self.NWA_S21_btn.pack_forget()
+        
+        # Cal buttons
+        self.NWA_cal_yes = Button(frame, text="Start Calibration", bg="green")
+        self.NWA_cal_yes.bind("<Button-1>",
+                              lambda event, GUI_list=[self.NWA_S21_label,self.NWA_S21_btn]:
+                                self.NWA_Cal(GUI_list))
+        self.NWA_cal_yes.pack()
+        self.NWA_cal_yes.pi=self.NWA_cal_yes.pack_info()
+        self.NWA_cal_yes.pack_forget()
+        
+        self.NWA_cal_no = Button(frame, text="Skip Calibration", bg="red", fg="white")
+        self.NWA_cal_no.bind("<Button-1>",
+                              lambda event, GUI_list=[self.NWA_S21_label,self.NWA_S21_btn]:
+                                self.NWA_Calpass(GUI_list))
+        self.NWA_cal_no.pack()
+        self.NWA_cal_no.pi=self.NWA_cal_no.pack_info()
+        self.NWA_cal_no.pack_forget()
+        
+        # Button to GPIB Init
+        self.GPIB_go = Button(frame, text="Init GPIB", bg="red", fg="white")
+        self.GPIB_go.bind("<Button-1>",
+                          lambda event, GUI_list=[self.NWA_cal_label,self.NWA_cal_yes,self.NWA_cal_no]:
+                          self.GPIB_init(GUI_list))
+        self.GPIB_go.pack(anchor="center")
         root.mainloop()
-
-
-    def GUI_toggle(self,GUI_handle,GUI_info, GUI_visible):
-        if GUI_visible:
-            GUI_handle.pack_forget()
-        else:
-            GUI_handle.pack(GUI_handle.pack)
-        GUI_handle.visiable = not GUI_handle.visible
     
-    def GPIB_init(self,event):
+    def GPIB_init(self,GUI_list):
         '''
         Pop up window to show if the HP8753C is found
         '''
@@ -88,24 +98,40 @@ class NWA_GUI():
             self.instr.pack()
         self.init_quit = Button(self.frame1, text="Exit", bg="red", fg="white",command=self.frame1.destroy)
         self.init_quit.pack()
-        
-    
-    def NWA_Cal(self,event):
+        self.toggle(GUI_list)
+            
+    def NWA_Cal(self,GUI_list):
+        '''
+        Start the network analyzer calibration
+        '''
         print("Let's start the calibration!")
         self.inst.NWA_cal()
         
+        self.toggle(GUI_list)      
     
-    def NWA_Calpass(self, event):
+    def NWA_Calpass(self, GUI_list):
+        '''
+        Warn user about skipping calibration, give a choice to calibrate
+        '''
         self.frame1 = Toplevel()
         self.calwarn_label = Label(self.frame1, text=("Calibration is needed for first time use!\n \
         Are you sure you want to skip the calibration?"), justify='center', fg='red',font=('bold',20))
         self.calwarn_label.pack()
         self.calwarn_skip = Button(self.frame1, text=("Yes"),bg="green", command=self.frame1.destroy)
+        self.calwarn_skip.bind("<Button-1>",lambda event: self.toggle(GUI_list))
         self.calwarn_skip.pack(side=LEFT)
         self.calwarn_back = Button(self.frame1, text="I want to calibrate",bg="red",fg="white",command=self.frame1.destroy)
         self.calwarn_back.bind("<Button-1>",self.NWA_Cal)
         self.calwarn_back.pack(side=LEFT)
-        
+
+    def NWA_S21(self, GUI_list):
+        print("Got you in NWA_S21")
+        self.inst.S21_measure()        
+
+    
+    def toggle(self,GUI_obj_list):
+        for GUI_handle in GUI_obj_list:
+            GUI_handle.pack(GUI_handle.pi)   
         
         '''
         task_option = ("GPIB Init", "Network Analyzer Calibration", "S21 Measurement")
