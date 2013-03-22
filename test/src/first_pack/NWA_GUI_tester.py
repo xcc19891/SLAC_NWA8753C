@@ -3,7 +3,7 @@ Created on Mar 18, 2013
 
 @author: charliex
 '''
-from Tkinter import *
+#from Tkinter import *
 from NWA_GUI import *
 
 

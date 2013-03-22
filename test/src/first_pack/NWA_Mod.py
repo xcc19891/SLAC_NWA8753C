@@ -27,7 +27,8 @@ class BPM_NWA:
                         manufact, model_num, ser_num, firm_ver = self.gpib_dev_attri.split(",",4)
                         if (model_num == "8753C") and (manufact == "HEWLETT PACKARD"):
                             print("Device found")
-                            self.gpib_dev.write("OPC?;PRES") 
+                            self.gpib_dev.write("OPC?;PRES")
+                            self.instrument_timeout = self.gpib_dev.timeout
                         error = 0
                         break
                     except VisaIOError:
@@ -104,4 +105,122 @@ class BPM_NWA:
         
     def S21_measure(self):
         print("Got you in NWA_Mod")
-        pass
+        #Change the timeout timer to work with marker output
+        self.instrument_timeout_def = self.instrument_timeout     #save the old timeout time
+        self.instrument_timeout = 20.0
+        self.gpib_dev.timeout = self.instrument_timeout
+        print("Changing the timeout timer to %s sec" %self.gpib_dev.timeout)
+        
+        # Ask about what kind of BPM is being calibrated
+        #BPM_style = raw_input("What style is the BPM's processing freq? ")
+        #print("Frequency %r" %(BPM_style) )
+        self.gpib_dev.write("STAR 270 MHZ; STOP 330 MHZ;OPC?")
+        #self.gpib_dev.write("CENT 300 MHZ; SPAN 60 MHZ;OPC?")
+        self.gpib_dev.write("S21")
+        self.gpib_dev.write("LINM")
+        self.gpib_dev.write("AUTO")
+        self.gpib_dev.write("IFBW 100HZ")
+        self.gpib_dev.write("MARK1 300MHZ")
+        self.gpib_dev.ask("*OPC?")
+        
+        test1 = self.S_TRAN()
+        test2 = self.S_TRAN()
+        test3 = self.S_TRAN()
+        
+        raw_input("Connect port 1 to RED and port 2 to BLUE, then press enter")
+        self.gpib_dev.write("WAIT")
+        result = self.gpib_dev.ask_for_values("OUTPMARK")
+        self.gpib_dev.ask("*OPC?")
+        #result = self.gpib_dev.read_values()
+        #result = self.gpib_dev.read()
+        #print(result)
+        #test1["S21"], phase, frequency = result
+        #print("magnitude is %s Unit, phase is %s degree, at %.3eHz" %(test1["S21"], phase, frequency))
+        test1["S21"], phase, frequency = result
+        time.sleep(2)
+        self.gpib_dev.write("WAIT")
+        result = self.gpib_dev.ask_for_values("OUTPMARK")
+        self.gpib_dev.ask("*OPC?")
+        test2["S21"], phase, frequency = result
+        time.sleep(2)
+        self.gpib_dev.write("WAIT")
+        result = self.gpib_dev.ask_for_values("OUTPMARK")
+        self.gpib_dev.ask("*OPC?")
+        test3["S21"], phase, frequency = result
+        time.sleep(2)
+            
+        raw_input("Connect port 1 to RED and port 2 to GREEN, then press enter")
+        self.gpib_dev.write("MARK1 300MHZ")
+        self.gpib_dev.write("WAIT")
+        result = self.gpib_dev.ask_for_values("OUTPMARK")
+        self.gpib_dev.ask("*OPC?")
+        test1["S41"], phase, frequency = result 
+        time.sleep(2)
+        self.gpib_dev.write("WAIT")   
+        result = self.gpib_dev.ask_for_values("OUTPMARK")
+        self.gpib_dev.ask("*OPC?")
+        test2["S41"], phase, frequency = result
+        time.sleep(2)
+        self.gpib_dev.write("WAIT")
+        result = self.gpib_dev.ask_for_values("OUTPMARK")
+        self.gpib_dev.ask("*OPC?")
+        test3["S41"], phase, frequency = result
+        time.sleep(2)
+        
+        raw_input("Connect port 1 to YELLOW and port 2 to BLUE, then press enter")
+        self.gpib_dev.write("MARK1 300MHZ")
+        self.gpib_dev.write("WAIT")
+        result = self.gpib_dev.ask_for_values("OUTPMARK")
+        self.gpib_dev.ask("*OPC?")
+        test1["S23"], phase, frequency = result
+        time.sleep(2)
+        self.gpib_dev.write("WAIT")
+        result = self.gpib_dev.ask_for_values("OUTPMARK")
+        self.gpib_dev.ask("*OPC?")
+        test2["S23"], phase, frequency = result
+        time.sleep(2)
+        self.gpib_dev.write("WAIT")
+        result = self.gpib_dev.ask_for_values("OUTPMARK")
+        self.gpib_dev.ask("*OPC?")
+        test3["S23"], phase, frequency = result
+        time.sleep(2)
+                
+        raw_input("Connect port 1 to YELLOW and port 2 to GREEN, then press enter")
+        self.gpib_dev.write("MARK1 300MHZ")
+        self.gpib_dev.write("WAIT")
+        result = self.gpib_dev.ask_for_values("OUTPMARK")
+        self.gpib_dev.ask("*OPC?")
+        test1["S43"], phase, frequency = result
+        time.sleep(2)
+        self.gpib_dev.write("WAIT")
+        result = self.gpib_dev.ask_for_values("OUTPMARK")
+        self.gpib_dev.ask("*OPC?")
+        test2["S43"], phase, frequency = result  
+        time.sleep(2)
+        self.gpib_dev.write("WAIT")
+        result = self.gpib_dev.ask_for_values("OUTPMARK")
+        self.gpib_dev.ask("*OPC?")
+        test3["S43"], phase, frequency = result
+        time.sleep(2)
+        
+        #Changing back the timeout timer
+        self.instrument_timeout = self.instrument_timeout_def
+        self.gpib_dev.timeout = self.instrument_timeout
+        print("Time out timer is changed back to %s sec" %self.gpib_dev.timeout)
+                  
+        x1 = ((test1["S41"]-test1["S21"])-(test1["S43"]-test1["S23"]))/(test1["S21"]+test1["S41"]+test1["S43"]+test1["S23"])
+        y1 = ((test1["S41"]-test1["S43"])-(test1["S21"]-test1["S23"]))/(test1["S21"]+test1["S41"]+test1["S43"]+test1["S23"])
+        
+        x2 = ((test2["S41"]-test2["S21"])-(test2["S43"]-test2["S23"]))/(test2["S21"]+test2["S41"]+test2["S43"]+test2["S23"])
+        y2 = ((test2["S41"]-test2["S43"])-(test2["S21"]-test2["S23"]))/(test2["S21"]+test2["S41"]+test2["S43"]+test2["S23"])
+        
+        x3 = ((test3["S41"]-test3["S21"])-(test3["S43"]-test3["S23"]))/(test3["S21"]+test3["S41"]+test3["S43"]+test3["S23"])
+        y3 = ((test3["S41"]-test3["S43"])-(test3["S21"]-test3["S23"]))/(test3["S21"]+test3["S41"]+test3["S43"]+test3["S23"])
+        print("First sets of sample data: %s" %(test1))
+        print("Second sets of sample data: %s" %test2)
+        print("Third sets of sample data: %s" %test3)
+        print("X center for 1st set: %s, 2nd set: %s, 3rd set: %s" %(x1,x2,x3))
+        print("Y center for 1st set: %s, 2nd set: %s, 3rd set: %s" %(y1,y2,y3))
+        
+    def S_TRAN(self):
+        return {"S21":0,"S41":0,"S23":0,"S43":0}
