@@ -28,7 +28,9 @@ class NWA_GUI():
         
         frame = Frame(root)
         frame.pack()
-        #Title
+        
+        # Labels for the frame
+        # Title
         self.title = Label(frame,text="Welcome to the SLAC BPM characterization program!", fg="red", font=("Arial",20,'bold'))
         self.title.pack()
         
@@ -51,6 +53,8 @@ class NWA_GUI():
         self.NWA_S21_label.pi=self.NWA_S21_label.pack_info()
         self.NWA_S21_label.pack_forget()
         
+        
+        # Buttons declear
         # S21 button
         self.NWA_S21_btn = Button(frame, text="Start S21 measurement", bg="green")
         self.NWA_S21_btn.bind("<Button-1>",
@@ -83,6 +87,7 @@ class NWA_GUI():
                           self.GPIB_init(GUI_list))
         self.GPIB_go.pack(anchor="center")
         root.mainloop()
+    
     
     def GPIB_init(self,GUI_list):
         '''

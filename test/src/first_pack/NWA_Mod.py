@@ -4,6 +4,7 @@ Created on Mar 18, 2013
 @author: charliex
 '''
 from visa import *
+from Tkinter import *
 #from NetworkAnaly_GUI import *
 
 class BPM_NWA:
@@ -14,6 +15,9 @@ class BPM_NWA:
  
     
     def GPIB_fetch(self):
+        manufact, model_num, ser_num, firm_ver, error = [0,0,0,0,0]
+        return manufact, model_num, ser_num, firm_ver, error
+        '''
         error = 1
         self.myinstr = get_instruments_list()
         #print self.myinstr
@@ -38,11 +42,34 @@ class BPM_NWA:
             if error == 0:
                 break    
         return manufact, model_num, ser_num, firm_ver, error
+        '''
+    def prt_label(self,prt_text):
+        self.prt_label = Label(self.cal_frame, text=prt_text)
+        self.prt_label.pack(anchor='w')
+        self.msg_ind = self.msg_ind + 1
     
     def NWA_cal(self):
+        self.cal_frame = Toplevel()
+        self.msg_ind = 0
+        cal_messages = ("Connect OPEN to port 1, then click next","Connect SHORT to port 1, then press enter","Connect LOAD to port 1, then press enter",
+                       "Connect OPEN to port 2, then press enter","Connect SHORT to port 2, then press enter","Connect LOAD to port 2, then press enter",
+                       "Waiting for instrument to calculate calibration coefficient.","Reflection calibration finished.",
+                       "Connect port 1 to port 2, then press enter","waiting for instrument to calculate calibration coefficient","Transmission calibration finished",
+                       "Calculating calibration coefficient for the full 2-port calibration","Full 2-port calibration finished, press exit to go back")
         #print(self.gpib_dev)
         #print("Let's start the calibration!")
+        print(cal_messages[0])
+        self.cal_grt = Label(self.cal_frame,text="Network Analyzer Calibration\n Please use correct calkit for this test", font=(16))
+        self.cal_grt.pack()
         #The 8753C Network Analyzer doesn't support the CALK35ME calkit, so the CALK35MM calkit is used
+        self.cal_next = Button(self.cal_frame,text="Next")
+        self.cal_next.bind("<Button-1>",
+                           lambda event:self.prt_label(cal_messages[self.msg_ind]))
+        self.cal_next.pack()
+        #label_text = 
+        #self.prt_label(label_text)
+        
+        '''
         self.gpib_dev.write("CALK35MM;CLES,ESE64")
         self.gpib_dev.write("CALIFUL2")                         #Performing a full 2-port cal
         self.gpib_dev.write("REFL")                             #Reflection calibration
@@ -60,7 +87,7 @@ class BPM_NWA:
         self.gpib_dev.write("CLASS22C")
         print("Waiting for instrument to calculate calibration coefficient.")
         self.gpib_dev.write("OPC?;REFD")
-        while True:                             #Exception handling incase the calibration timesout PyVISA
+        while True:                             #Exception handling in case the calibration timesout PyVISA
             try:
                 self.gpib_dev.ask("*OPC?")
                 
@@ -102,6 +129,9 @@ class BPM_NWA:
             except VisaIOError:
                 self.gpib_dev.ask("*OPC?")
         print("Full 2-port calibration finished")
+        '''
+        self.cal_quit = Button(self.cal_frame, text="Exit", bg="red", fg="white",command=self.cal_frame.destroy)
+        self.cal_quit.pack()
         
     def S21_measure(self):
         print("Got you in NWA_Mod")
