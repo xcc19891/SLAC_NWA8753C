@@ -43,28 +43,37 @@ class BPM_NWA:
                 break    
         return manufact, model_num, ser_num, firm_ver, error
         '''
-    def prt_label(self,prt_text):
-        self.prt_label = Label(self.cal_frame, text=prt_text)
-        self.prt_label.pack(anchor='w')
-        self.msg_ind = self.msg_ind + 1
+        
+    def prt_hack(self):
+        msg_txt = StringVar()
+        if (self.msg_ind) < (len(self.cal_messages)-1):
+            self.msg_ind = self.msg_ind + 1
+            self.cal_message = self.cal_messages[self.msg_ind]
+            #print(self.msg_ind)
+            #print(len(self.cal_messages))
+            msg_txt.set(self.cal_message)
+            self.prt_label = Label(self.cal_frame, textvariable=msg_txt)
+            self.prt_label.pack(anchor='w')
+        else:
+            msg_txt.set("End of calibration.")    
     
     def NWA_cal(self):
         self.cal_frame = Toplevel()
         self.msg_ind = 0
-        cal_messages = ("Connect OPEN to port 1, then click next","Connect SHORT to port 1, then press enter","Connect LOAD to port 1, then press enter",
+        self.cal_messages = ("Hello","Connect OPEN to port 1, then click next","Connect SHORT to port 1, then press enter","Connect LOAD to port 1, then press enter",
                        "Connect OPEN to port 2, then press enter","Connect SHORT to port 2, then press enter","Connect LOAD to port 2, then press enter",
                        "Waiting for instrument to calculate calibration coefficient.","Reflection calibration finished.",
                        "Connect port 1 to port 2, then press enter","waiting for instrument to calculate calibration coefficient","Transmission calibration finished",
                        "Calculating calibration coefficient for the full 2-port calibration","Full 2-port calibration finished, press exit to go back")
         #print(self.gpib_dev)
         #print("Let's start the calibration!")
-        print(cal_messages[0])
+        print(self.cal_messages[0])
         self.cal_grt = Label(self.cal_frame,text="Network Analyzer Calibration\n Please use correct calkit for this test", font=(16))
         self.cal_grt.pack()
         #The 8753C Network Analyzer doesn't support the CALK35ME calkit, so the CALK35MM calkit is used
         self.cal_next = Button(self.cal_frame,text="Next")
         self.cal_next.bind("<Button-1>",
-                           lambda event:self.prt_label(cal_messages[self.msg_ind]))
+                           lambda event:self.prt_hack())
         self.cal_next.pack()
         #label_text = 
         #self.prt_label(label_text)
@@ -144,6 +153,9 @@ class BPM_NWA:
         # Ask about what kind of BPM is being calibrated
         #BPM_style = raw_input("What style is the BPM's processing freq? ")
         #print("Frequency %r" %(BPM_style) )
+        self.cnt_messages = ("S21 Measurement","Connect port 1 to RED and port 2 to BLUE, then press enter","Connect port 1 to RED and port 2 to GREEN, then press enter",
+                             "Connect port 1 to YELLOW and port 2 to BLUE, then press enter","Connect port 1 to YELLOW and port 2 to GREEN, then press enter")
+        
         self.gpib_dev.write("STAR 270 MHZ; STOP 330 MHZ;OPC?")
         #self.gpib_dev.write("CENT 300 MHZ; SPAN 60 MHZ;OPC?")
         self.gpib_dev.write("S21")
