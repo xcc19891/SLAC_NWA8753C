@@ -20,7 +20,6 @@ class BPM_chara:
         self.rec_time_stampe = datetime.datetime.today()
         self.BPM_record.write("%s\n" %self.rec_time_stampe)
         self.BPM_record.write("BPM Serial Number: %s" %self.BPM_ser)
-        self.BPM_record.close()
         myinstr = get_instruments_list()
         print(myinstr)
         print("Default GPIB address for the network analyzer is \"GPIB0:16\"\n")
@@ -50,6 +49,10 @@ class BPM_chara:
         if cal_opt:
             self.NWA_cal()
         
+        self.S21_measure()
+        self.BPM_record.close()
+        
+        
         
     def S21_measure(self):
         #Change the timeout timer to work with marker output
@@ -59,10 +62,11 @@ class BPM_chara:
         print("Changing the timeout timer to %s sec" %self.my_instr.timeout)
         
         # Ask about what kind of BPM is being calibrated
-        #BPM_style = raw_input("What style is the BPM's processing freq? ")
-        #print("Frequency %r" %(BPM_style) )
-        self.my_instr.write("STAR 270 MHZ; STOP 330 MHZ;OPC?")
-        #self.my_instr.write("CENT 300 MHZ; SPAN 60 MHZ;OPC?")
+        self.BPM_cnt_f = raw_input("What style is the BPM's processing freq? (In MHZ)\n---> ")
+        self.BPM_cnt_f = int(self.BPM_cnt_f)
+        self.NWA_star = self.BPM_cnt_f - 30
+        self.NWA_stop = self.BPM_cnt_f + 30
+        self.my_instr.write("STAR "+self.NWA_star+" MHZ; STOP "+self.NWA_stop+" MHZ;OPC?")
         self.my_instr.write("S21")
         self.my_instr.write("LINM")
         self.my_instr.write("AUTO")
@@ -163,12 +167,23 @@ class BPM_chara:
         
         x3 = ((test3["S41"]-test3["S21"])-(test3["S43"]-test3["S23"]))/(test3["S21"]+test3["S41"]+test3["S43"]+test3["S23"])
         y3 = ((test3["S41"]-test3["S43"])-(test3["S21"]-test3["S23"]))/(test3["S21"]+test3["S41"]+test3["S43"]+test3["S23"])
-        print("First sets of sample data: %s" %(test1))
+                
+        print("First sets of sample data: %s" %test1)
         print("Second sets of sample data: %s" %test2)
         print("Third sets of sample data: %s" %test3)
         print("X center for 1st set: %s, 2nd set: %s, 3rd set: %s" %(x1,x2,x3))
         print("Y center for 1st set: %s, 2nd set: %s, 3rd set: %s" %(y1,y2,y3))
 
+        self.BPM_record.write("Record format is: \n")
+        self.BPM_record.write("S21,S41,S23,S43\n")
+        self.BPM_record.write("%s\n" %test1)
+        self.BPM_record.write("%s\n" %test2)
+        self.BPM_record.write("%s\n" %test2)
+        self.BPM_record.write("X center is at:\n")
+        self.BPM_record.write("%s,%s,%s" %(x1,x2,x3))
+        self.BPM_record.write("Y center is at:\n")
+        self.BPM_record.write("%s,%s,%s" %(y1,y2,y3))
+        
 
     def S_TRAN(self):
         return {"S21":0,"S41":0,"S23":0,"S43":0}
