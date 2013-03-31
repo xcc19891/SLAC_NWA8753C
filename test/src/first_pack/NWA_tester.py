@@ -13,13 +13,18 @@ class BPM_chara:
     def __init__(self):
         print("Welcome to SLAC BPM characterization program\n")
         self.BPM_ser = raw_input("Please enter BPM serial number:\n")
+        
         self.BPM_record = open("BPM-"+self.BPM_ser+"-cal.txt", "w+")
         #print("Filename: %s" %self.BPM_record.name)
         #print("File mode: %s" %self.BPM_record.mode)
         self.BPM_record.write("Calibration Date:")
         self.rec_time_stampe = datetime.datetime.today()
         self.BPM_record.write("%s\n" %self.rec_time_stampe)
-        self.BPM_record.write("BPM Serial Number: %s" %self.BPM_ser)
+        self.BPM_record.write("BPM Serial Number: %s\n" %self.BPM_ser)
+        self.BPM_pmcc_str = raw_input("Please enter BPM radius in mm: \n--->")
+        self.BPM_pmcc = int(self.BPM_pmcc_str)
+        self.BPM_record.write("BPM radius is: %d mm\n" %self.BPM_pmcc)
+        
         myinstr = get_instruments_list()
         print(myinstr)
         print("Default GPIB address for the network analyzer is \"GPIB0:16\"\n")
@@ -40,14 +45,18 @@ class BPM_chara:
         
         self.my_instr.write("OPC?;PRES")                        #Return instrument to preset
         
-        self.self.instrument_timeout = self.my_instr.timeout
+        self.instrument_timeout = self.my_instr.timeout
         #print("Time out timers is %s second" %self.instrument_timeout)
         
+        #print(self.my_instr.ask("READDATE"))
+        #print(self.my_instr.ask("READTIME"))
         
         print("WARNING:If you are running this process for the first time\n you need to calibrate the network analyzer")
-        cal_opt = raw_input("Do you want to calibrate the Network analyzer? ---> ")
-        if cal_opt:
+        cal_opt = raw_input("Do you want to calibrate the Network analyzer?\n---> ")
+        
+        if (cal_opt == "yes") or (cal_opt == "Yes"):
             self.NWA_cal()
+        
         
         self.S21_measure()
         self.BPM_record.close()
@@ -63,15 +72,18 @@ class BPM_chara:
         
         # Ask about what kind of BPM is being calibrated
         self.BPM_cnt_f = raw_input("What style is the BPM's processing freq? (In MHZ)\n---> ")
-        self.BPM_cnt_f = int(self.BPM_cnt_f)
-        self.NWA_star = self.BPM_cnt_f - 30
-        self.NWA_stop = self.BPM_cnt_f + 30
+        self.BPM_cnt_f_int = int(self.BPM_cnt_f)
+        self.NWA_star = str(self.BPM_cnt_f_int - 30)
+        self.NWA_stop = str(self.BPM_cnt_f_int + 30)
         self.my_instr.write("STAR "+self.NWA_star+" MHZ; STOP "+self.NWA_stop+" MHZ;OPC?")
         self.my_instr.write("S21")
         self.my_instr.write("LINM")
         self.my_instr.write("AUTO")
         self.my_instr.write("IFBW 100HZ")
-        self.my_instr.write("MARK1 300MHZ")
+        self.my_instr.write("MARK1 "+self.BPM_cnt_f+"MHZ")
+        
+        self.BPM_record.write("BPM processing freq: %s\n MHz" %self.BPM_cnt_f)
+        
         self.my_instr.ask("*OPC?")
         
         test1 = self.S_TRAN()
@@ -168,21 +180,21 @@ class BPM_chara:
         x3 = ((test3["S41"]-test3["S21"])-(test3["S43"]-test3["S23"]))/(test3["S21"]+test3["S41"]+test3["S43"]+test3["S23"])
         y3 = ((test3["S41"]-test3["S43"])-(test3["S21"]-test3["S23"]))/(test3["S21"]+test3["S41"]+test3["S43"]+test3["S23"])
                 
-        print("First sets of sample data: %s" %test1)
-        print("Second sets of sample data: %s" %test2)
-        print("Third sets of sample data: %s" %test3)
-        print("X center for 1st set: %s, 2nd set: %s, 3rd set: %s" %(x1,x2,x3))
-        print("Y center for 1st set: %s, 2nd set: %s, 3rd set: %s" %(y1,y2,y3))
-
+        print("First sets of sample data:\n %s" %test1)
+        print("Second sets of sample data:\n %s" %test2)
+        print("Third sets of sample data:\n %s" %test3)
+        print("X center for\n1st set: %s,\n2nd set: %s,\n3rd set: %s\n" %(x1,x2,x3))
+        print("Y center for\n1st set: %s,\n2nd set: %s,\n3rd set: %s\n" %(y1,y2,y3))
+  
         self.BPM_record.write("Record format is: \n")
         self.BPM_record.write("S21,S41,S23,S43\n")
         self.BPM_record.write("%s\n" %test1)
         self.BPM_record.write("%s\n" %test2)
         self.BPM_record.write("%s\n" %test2)
         self.BPM_record.write("X center is at:\n")
-        self.BPM_record.write("%s,%s,%s" %(x1,x2,x3))
+        self.BPM_record.write("%s,%s,%s\n" %(x1,x2,x3))
         self.BPM_record.write("Y center is at:\n")
-        self.BPM_record.write("%s,%s,%s" %(y1,y2,y3))
+        self.BPM_record.write("%s,%s,%s\n" %(y1,y2,y3))
         
 
     def S_TRAN(self):
